@@ -15,7 +15,7 @@
 <div class="box">
     <h2 style="color:#28a745;">নতুন অ্যাকাউন্ট খুলুন</h2>
     <input type="text" id="newName" placeholder="আপনার নাম">
-    <input type="text" id="newUsername" placeholder="ইউজারনেম (সব ছোট হাতের)">
+    <input type="text" id="newUsername" placeholder="ইউজারনেম">
     <input type="password" id="newPassword" placeholder="নতুন পাসওয়ার্ড">
     <button class="btn" onclick="registerUser()">রেজিস্ট্রেশন করুন</button>
     <p style="margin-top:15px;"><a href="index.html">লগইন পেজে ফিরে যান</a></p>
@@ -23,8 +23,16 @@
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-<script src="script.js"></script>
 <script>
+    // Firebase সরাসরি এখানে সেট করে দিচ্ছি যাতে ভুল না হয়
+    const firebaseConfig = {
+        databaseURL: "https://earnhub-96-default-rtdb.firebaseio.com/"
+    };
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.database();
+
     function registerUser() {
         const name = document.getElementById('newName').value;
         const user = document.getElementById('newUsername').value.toLowerCase().trim();
@@ -36,11 +44,9 @@
                 password: pass,
                 balance: 0.00
             }).then(() => {
-                alert("রেজিস্ট্রেশন সফল হয়েছে!");
+                alert("রেজিস্ট্রেশন সফল হয়েছে! এখন লগইন করুন।");
                 location.href = 'index.html';
-            }).catch((error) => {
-                alert("ভুল হয়েছে: " + error.message);
-            });
+            }).catch((e) => alert("ভুল: " + e.message));
         } else {
             alert("সবগুলো ঘর পূরণ করুন!");
         }
