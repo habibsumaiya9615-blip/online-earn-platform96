@@ -4,39 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EarnHub Dashboard</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { font-family: Arial; margin: 0; background: #eef2f3; }
-        .header { background: #1a237e; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
-        .side-menu { position: fixed; top: 0; right: -280px; width: 280px; height: 100%; background: #2196F3; transition: 0.4s; z-index: 1000; color: white; padding-top: 20px; }
-        .side-menu.active { right: 0; }
-        .menu-item { display: flex; align-items: center; padding: 15px 25px; color: white; text-decoration: none; font-size: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); cursor: pointer; }
-        .menu-item i { margin-right: 15px; width: 20px; }
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 900; }
-        .overlay.active { display: block; }
+        body { font-family: sans-serif; margin: 0; background: #eef2f3; text-align: center; }
+        .header { background: #1a237e; color: white; padding: 15px; font-weight: bold; }
+        .card { background: white; padding: 20px; margin: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     </style>
 </head>
-<body onload="loadAllWork()">
-
-<div class="header">
-    <span>EarnHub Platform</span>
-    <i class="fas fa-bars" style="font-size:24px; cursor:pointer;" onclick="toggleMenu()"></i>
-</div>
-
-<div class="overlay" id="overlay" onclick="toggleMenu()"></div>
-
-<div class="side-menu" id="sideMenu">
-    <div class="menu-item" onclick="location.href='index.html'"><i class="fas fa-home"></i> Home</div>
-    <div class="menu-item"><i class="fas fa-headset"></i> Support</div>
-    <div class="menu-item"><i class="fas fa-wallet"></i> Withdraw</div>
-    <div class="menu-item" onclick="loadAllWork()"><i class="fas fa-tasks"></i> All Work</div>
-    <div class="menu-item" style="margin-top:20px; background:rgba(0,0,0,0.1);"><i class="fas fa-sign-out-alt"></i> Logout</div>
-</div>
-
-<div id="mainContent" style="padding: 10px;"></div>
+<body onload="loadUser()">
+    <div class="header">EarnHub Platform Dashboard</div>
+    <div class="card">
+        <h3>স্বাগতম, <span id="uName" style="color:#1a237e;">...</span>!</h3>
+        <p>আপনার ব্যালেন্স: <b style="color:#28a745;">৳ <span id="uBalance">0.00</span></b></p>
+    </div>
+    <div class="card">
+        <button onclick="localStorage.clear(); location.href='index.html';">লগ আউট</button>
+    </div>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 <script src="script.js"></script>
+<script>
+    function loadUser() {
+        const user = localStorage.getItem('currentUser');
+        if(!user) { location.href = 'index.html'; return; }
+        
+        db.ref('users/' + user).on('value', (snap) => {
+            const data = snap.val();
+            if(data) {
+                document.getElementById('uName').innerText = data.full_name;
+                document.getElementById('uBalance').innerText = data.balance.toFixed(2);
+            }
+        });
+    }
+</script>
 </body>
 </html>
