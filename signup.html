@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EarnHub - Sign Up</title>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; background: #f4f7f6; margin: 0; padding-top: 50px; }
+        .box { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 80%; max-width: 350px; text-align: center; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        .btn { background: #28a745; color: white; border: none; padding: 12px; width: 100%; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+    </style>
+</head>
+<body>
+<div class="box">
+    <h2 style="color:#28a745;">নতুন অ্যাকাউন্ট খুলুন</h2>
+    <input type="text" id="newName" placeholder="আপনার নাম">
+    <input type="text" id="newUsername" placeholder="ইউজারনেম (সব ছোট হাতের)">
+    <input type="password" id="newPassword" placeholder="নতুন পাসওয়ার্ড">
+    <button class="btn" onclick="registerUser()">রেজিস্ট্রেশন করুন</button>
+    <p style="margin-top:15px;"><a href="index.html">লগইন পেজে ফিরে যান</a></p>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<script src="script.js"></script>
+<script>
+    function registerUser() {
+        const name = document.getElementById('newName').value;
+        const user = document.getElementById('newUsername').value.toLowerCase().trim();
+        const pass = document.getElementById('newPassword').value;
+
+        if(name && user && pass) {
+            db.ref('users/' + user).set({
+                full_name: name,
+                password: pass,
+                balance: 0.00
+            }).then(() => {
+                alert("রেজিস্ট্রেশন সফল হয়েছে!");
+                location.href = 'index.html';
+            }).catch((error) => {
+                alert("ভুল হয়েছে: " + error.message);
+            });
+        } else {
+            alert("সবগুলো ঘর পূরণ করুন!");
+        }
+    }
+</script>
+</body>
+</html>
