@@ -1,50 +1,57 @@
-<!DOCTYPE html>
-<html lang="bn">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EarnHub - Welcome</title>
-    <style>
-        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; background: #f4f7f6; margin: 0; }
-        .top-card { background: white; width: 90%; max-width: 400px; margin: 20px; border-radius: 15px; padding: 15px; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border-left: 5px solid #ffc107; align-items: center; }
-        .top-card img { width: 60px; height: 60px; border-radius: 50%; margin-right: 15px; border: 2px solid #ffc107; object-fit: cover; }
-        .login-box { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 80%; max-width: 350px; text-align: center; margin-top: 50px; }
-        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
-        .btn { background: #1a237e; color: white; border: none; padding: 12px; width: 100%; border-radius: 5px; cursor: pointer; font-weight: bold; }
-    </style>
-</head>
-<body>
+const firebaseConfig = {
+    apiKey: "AIzaSyAsv63mK-7Y_7e_M9p-6k7L0uY7P0-P0",
+    authDomain: "earnhub-96.firebaseapp.com",
+    databaseURL: "https://earnhub-96-default-rtdb.firebaseio.com",
+    projectId: "earnhub-96",
+    storageBucket: "earnhub-96.appspot.com",
+    messagingSenderId: "105566778899",
+    appId: "1:105566778899:web:a1b2c3d4e5f6g7h8i9j0"
+};
 
-<div id="topReferrerCard" class="top-card">
-    <img id="topImg" src="" alt="Winner">
-    <div>
-        <h4 id="topName" style="margin:0;">সেরা রেফারার</h4>
-        <p id="topAbout" style="font-size:12px; margin:5px 0; color:#666;"></p>
-        <b style="color:#28a745; font-size:12px;">🏆 মাসিক সেলারি বিজয়ী</b>
-    </div>
-</div>
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-<div class="login-box">
-    <h2 style="color:#1a237e;">EarnHub লগইন</h2>
-    <input type="text" id="username" placeholder="ইউজারনেম">
-    <input type="password" id="password" placeholder="পাসওয়ার্ড">
-    <button class="btn" onclick="location.href='dashboard.html'">লগইন করুন</button>
-</div>
+function toggleMenu() {
+    document.getElementById('sideMenu').classList.toggle('active');
+    document.getElementById('overlay').classList.toggle('active');
+}
 
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-<script src="script.js"></script>
-<script>
-    // ডাটাবেস থেকে সেরা রেফারার এর ডাটা আনা
-    db.ref('settings/topReferrer').on('value', (snap) => {
-        const data = snap.val();
-        if(data) {
-            document.getElementById('topImg').src = data.img;
-            document.getElementById('topName').innerText = data.name;
-            document.getElementById('topAbout').innerText = data.about;
-            document.getElementById('topReferrerCard').style.display = 'flex';
+function checkPassword(pass) {
+    const easyPattern = /^(.)\1+$/;
+    if (pass.length < 6 || easyPattern.test(pass)) {
+        alert("ভুল পাসওয়ার্ড! কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন।");
+        return false;
+    }
+    return true;
+}
+
+function makeReferCode(name) {
+    return name.substring(0, 3).toUpperCase() + Math.floor(1000 + Math.random() * 9000);
+}
+
+function loadAllWork() {
+    let container = document.getElementById('mainContent');
+    container.innerHTML = "<h2>সকল কাজ</h2>";
+    
+    db.ref('tasks').on('value', (snap) => {
+        if (!snap.exists()) {
+            container.innerHTML += "<p>কোনো টাস্ক পাওয়া যায়নি। এডমিন থেকে অ্যাড করুন।</p>";
+            return;
         }
+        snap.forEach((child) => {
+            let task = child.val();
+            container.innerHTML += `
+                <div class="task-card" style="background: white; margin: 15px; padding: 15px; border-radius: 10px; border-left: 6px solid #2196F3; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <h3 style="color:#1a237e;">টাস্ক নাম্বার ${child.key}</h3>
+                    <div style="font-size: 14px; color: #555; background:#f9f9f9; padding:10px; border-radius:8px;">
+                        <p>🎥 রেজিস্ট্রেশন ভিডিও: <a href="${task.v1}" target="_blank">দেখুন</a></p>
+                        <p>🛠️ কাজ করার ভিডিও: <a href="${task.v2}" target="_blank">দেখুন</a></p>
+                        <p>💰 উইথড্র ভিডিও: <a href="${task.v3 || '#'}" target="_blank">দেখুন</a></p>
+                        <p>📱 ওয়ালেট নম্বর: <b>${task.wallet}</b></p>
+                    </div>
+                    <button style="background:#28a745; color:white; border:none; padding:10px; width:100%; border-radius:5px; margin-top:10px; cursor:pointer;">কাজ শুরু করুন</button>
+                </div>
+            `;
+        });
     });
-</script>
-</body>
-</html>
+}
