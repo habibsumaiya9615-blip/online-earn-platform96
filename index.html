@@ -1,42 +1,273 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EarnHub - Login</title>
-    <style>
-        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; background: #f4f7f6; padding-top: 50px; }
-        .login-box { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 85%; max-width: 350px; text-align: center; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
-        .btn { background: #1a237e; color: white; border: none; padding: 12px; width: 100%; border-radius: 5px; cursor: pointer; font-weight: bold; }
-    </style>
-</head>
-<body>
-<div class="login-box">
-    <h2 style="color:#1a237e;">EarnHub লগইন</h2>
-    <input type="text" id="username" placeholder="ইউজারনেম">
-    <input type="password" id="password" placeholder="পাসওয়ার্ড">
-    <button class="btn" onclick="login()">লগইন করুন</button>
-    <p style="margin-top:15px;">অ্যাকাউন্ট নেই? <a href="signup.html">এখানে নতুন খুলুন</a></p>
-</div>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EarnHub - All-in-One Earning Platform</title>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-<script src="script.js"></script>
+
+<style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #0f172a; color: #fff; margin: 0; padding: 0; }
+    .container { max-width: 450px; margin: 20px auto; padding: 25px; background: #1e293b; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    h2 { color: #22c55e; text-align: center; margin-bottom: 20px; }
+    h3 { border-bottom: 2px solid #334155; padding-bottom: 5px; color: #3b82f6; }
+    input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; box-sizing: border-box; font-size: 16px; }
+    input { background: #334155; color: #fff; border: 1px solid #475569; }
+    button { background: #22c55e; color: #fff; cursor: pointer; font-weight: bold; transition: 0.3s; }
+    button:hover { background: #16a34a; opacity: 0.9; }
+    .hidden { display: none; }
+    .card { background: #334155; padding: 15px; border-radius: 10px; margin: 12px 0; border-left: 5px solid #22c55e; position: relative; }
+    .nav-btn { background: #3b82f6; margin-top: 5px; }
+    .logout-btn { background: #ef4444; margin-top: 20px; }
+    .admin-btn { background: #f59e0b; }
+    .status-pending { color: #f59e0b; font-weight: bold; }
+    a { color: #22c55e; text-decoration: none; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<div class="container" id="authSection">
+    <h2>EarnHub প্ল্যাটফর্ম</h2>
+    
+    <div id="regBox">
+        <h3>নতুন অ্যাকাউন্ট খুলুন</h3>
+        <input id="regName" placeholder="আপনার পুরো নাম">
+        <input id="regEmail" placeholder="ইমেইল (Email)">
+        <input id="regPass" type="password" placeholder="পাসওয়ার্ড (Password)">
+        <input id="regRef" placeholder="রেফার কোড (ঐচ্ছিক)">
+        <button onclick="registerUser()">রেজিস্ট্রেশন করুন</button>
+        <p style="text-align:center">আগে অ্যাকাউন্ট করেছেন? <a href="#" onclick="toggleAuth()">লগইন করুন</a></p>
+    </div>
+    
+    <div id="loginBox" class="hidden">
+        <h3>লগইন করুন</h3>
+        <input id="logEmail" placeholder="আপনার ইমেইল">
+        <input id="logPass" type="password" placeholder="আপনার পাসওয়ার্ড">
+        <button onclick="loginUser()">প্রবেশ করুন</button>
+        <p style="text-align:center">নতুন মেম্বার? <a href="#" onclick="toggleAuth()">রেজিস্ট্রেশন করুন</a></p>
+    </div>
+</div>
+
+<div class="container hidden" id="dashboardSection">
+    <h2 id="userNameDisplay">স্বাগতম!</h2>
+    <div class="card">
+        <p style="margin: 5px 0;">আপনার বর্তমান ব্যালেন্স</p>
+        <p style="font-size: 28px; color: #22c55e; margin: 5px 0;">৳ <span id="userBalance">0.00</span></p>
+        <p style="font-size: 14px; color: #94a3b8;">মোট সফল রেফার: <span id="userRefs">0</span></p>
+    </div>
+    
+    <button class="nav-btn" onclick="showSection('taskSection')">কাজ শুরু করুন (Tasks)</button>
+    <button class="nav-btn" onclick="showSection('withdrawSection')">টাকা তুলুন (Withdraw)</button>
+    
+    <button id="adminBtn" class="hidden admin-btn" onclick="showSection('adminSection')">এডমিন প্যানেল</button>
+    
+    <button class="logout-btn" onclick="logout()">লগ আউট করুন</button>
+</div>
+
+<div class="container hidden" id="taskSection">
+    <h2>উপলব্ধ কাজসমূহ</h2>
+    <div id="taskList"></div>
+    <button onclick="showSection('dashboardSection')" style="background:#64748b">ফিরে যান</button>
+</div>
+
+<div class="container hidden" id="withdrawSection">
+    <h2>টাকা উত্তোলন</h2>
+    <div class="card" style="background: #1e293b; border-left: 5px solid #3b82f6;">
+        <p>সর্বনিম্ন উইথড্র: <b>৫০ টাকা</b></p>
+    </div>
+    <input id="wMethod" placeholder="পেমেন্ট মেথড (বিকাশ/নগদ)">
+    <input id="wNumber" placeholder="আপনার নম্বর">
+    <input id="wAmount" type="number" placeholder="টাকার পরিমাণ (মিনিমাম ৫০)">
+    <button onclick="requestWithdraw()">উইথড্র রিকোয়েস্ট পাঠান</button>
+    <button onclick="showSection('dashboardSection')" style="background:#64748b">ফিরে যান</button>
+</div>
+
+<div class="container hidden" id="adminSection">
+    <h2>এডমিন কন্ট্রোল প্যানেল</h2>
+    <h3>নতুন টাস্ক অ্যাড করুন</h3>
+    <input id="tTitle" placeholder="টাস্কের নাম">
+    <input id="tLink" placeholder="ভিডিও লিঙ্ক">
+    <input id="tReward" type="number" placeholder="রিওয়ার্ড/টাকা (৳)">
+    <button onclick="addNewTask()">টাস্ক পাবলিশ করুন</button>
+    
+    <h3>পেন্ডিং উইথড্র রিকোয়েস্ট</h3>
+    <div id="pendingWithdraws"></div>
+    <button onclick="showSection('dashboardSection')" style="background:#64748b">ফিরে যান</button>
+</div>
+
 <script>
-    function login() {
-        const user = document.getElementById('username').value.toLowerCase().trim();
-        const pass = document.getElementById('password').value;
-        if(!user || !pass) { alert("ইউজারনেম ও পাসওয়ার্ড দিন"); return; }
-        
-        db.ref('users/' + user).once('value', (snap) => {
-            const data = snap.val();
-            if(data && data.password === pass) {
-                localStorage.setItem('currentUser', user);
-                location.href = 'dashboard.html';
-            } else { alert("ভুল তথ্য! আগে নতুন অ্যাকাউন্ট খুলুন।"); }
+// আপনার অরিজিনাল ফায়ারবেস কনফিগারেশন
+const firebaseConfig = {
+    apiKey: "AIzaSyAsv63mK-7Y_7e_M9p-6k7L0uY7P0-P0",
+    authDomain: "earnhub-96.firebaseapp.com",
+    databaseURL: "https://earnhub-96-default-rtdb.firebaseio.com",
+    projectId: "earnhub-96",
+    storageBucket: "earnhub-96.appspot.com",
+    messagingSenderId: "105566778899",
+    appId: "1:105566778899:web:a1b2c3d4e5f6g7h8i9j0"
+};
+
+// Initialize Firebase
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+const auth = firebase.auth();
+const db = firebase.database();
+let currentUID;
+
+// ইন্টারফেস কন্ট্রোল
+function showSection(id) {
+    document.querySelectorAll('.container').forEach(c => c.classList.add('hidden'));
+    document.getElementById(id).classList.remove('hidden');
+    if(id === 'taskSection') loadTasks();
+}
+
+function toggleAuth() {
+    document.getElementById('regBox').classList.toggle('hidden');
+    document.getElementById('loginBox').classList.toggle('hidden');
+}
+
+// রেজিস্ট্রেশন ফাংশন
+function registerUser() {
+    const email = document.getElementById('regEmail').value.trim();
+    const pass = document.getElementById('regPass').value;
+    const name = document.getElementById('regName').value.trim();
+    const ref = document.getElementById('regRef').value.trim();
+
+    if(!email || !pass || !name) { alert("দয়া করে সব ঘর পূরণ করুন!"); return; }
+
+    auth.createUserWithEmailAndPassword(email, pass).then(res => {
+        currentUID = res.user.uid;
+        db.ref('users/' + currentUID).set({
+            name: name,
+            balance: 0,
+            refs: 0,
+            role: 'user',
+            uid: currentUID
+        }).then(() => {
+            if(ref) {
+                db.ref('users/' + ref + '/refs').transaction(c => (c || 0) + 1);
+            }
+            alert('অভিনন্দন! রেজিস্ট্রেশন সফল হয়েছে।');
+            loadDashboard();
         });
+    }).catch(e => alert("ভুল ইমেইল বা পাসওয়ার্ড: " + e.message));
+}
+
+// লগইন ফাংশন
+function loginUser() {
+    const email = document.getElementById('logEmail').value.trim();
+    const pass = document.getElementById('logPass').value;
+    
+    auth.signInWithEmailAndPassword(email, pass).then(res => {
+        currentUID = res.user.uid;
+        loadDashboard();
+    }).catch(e => alert('ইমেইল বা পাসওয়ার্ড সঠিক নয়!'));
+}
+
+// ড্যাশবোর্ড ডাটা লোড
+function loadDashboard() {
+    db.ref('users/' + currentUID).on('value', snap => {
+        const data = snap.val();
+        if(!data) return;
+        showSection('dashboardSection');
+        document.getElementById('userNameDisplay').innerText = "হ্যালো, " + data.name;
+        document.getElementById('userBalance').innerText = data.balance.toFixed(2);
+        document.getElementById('userRefs').innerText = data.refs;
+        
+        // এডমিন চেক
+        if(data.role === 'admin' || data.name === 'habibur96') {
+            document.getElementById('adminBtn').classList.remove('hidden');
+        }
+    });
+}
+
+// টাস্ক সিস্টেম
+function loadTasks() {
+    const list = document.getElementById('taskList');
+    db.ref('tasks').on('value', snap => {
+        list.innerHTML = "";
+        if(!snap.exists()) { list.innerHTML = "<p>আপাতত কোনো কাজ নেই।</p>"; return; }
+        
+        snap.forEach(child => {
+            const t = child.val();
+            list.innerHTML += `<div class='card'>
+                <b>${t.title}</b><br>
+                পুরস্কার: ৳${t.reward} <br><br>
+                <a href='${t.link}' target='_blank'>🎥 ভিডিও দেখে কাজ শিখুন</a><br><br>
+                <button onclick="completeTask('${child.key}', ${t.reward})" style="padding:8px; font-size:14px">কাজ জমা দিন</button>
+            </div>`;
+        });
+    });
+}
+
+function completeTask(tid, reward) {
+    db.ref('users/' + currentUID + '/balance').transaction(b => (b || 0) + reward);
+    alert('সাবাশ! আপনি ৳' + reward + ' আর্ন করেছেন।');
+}
+
+// উইথড্র সিস্টেম (মিনিমাম ৫০ টাকা)
+function requestWithdraw() {
+    const amount = Number(document.getElementById('wAmount').value);
+    const method = document.getElementById('wMethod').value;
+    const num = document.getElementById('wNumber').value;
+
+    if(amount < 50) {
+        alert('দুঃখিত! সর্বনিম্ন ৫০ টাকা না হলে উইথড্র করা যাবে না।');
+        return;
     }
+
+    db.ref('users/' + currentUID + '/balance').once('value', snap => {
+        const currentBalance = snap.val() || 0;
+        if(currentBalance >= amount) {
+            db.ref('withdraws').push({
+                uid: currentUID,
+                method: method,
+                number: num,
+                amount: amount,
+                status: 'pending',
+                time: Date.now()
+            });
+            // ব্যালেন্স থেকে কেটে নেওয়া
+            db.ref('users/' + currentUID + '/balance').set(currentBalance - amount);
+            alert('আপনার রিকোয়েস্টটি এডমিনের কাছে পাঠানো হয়েছে।');
+            showSection('dashboardSection');
+        } else {
+            alert('আপনার অ্যাকাউন্টে পর্যাপ্ত টাকা নেই!');
+        }
+    });
+}
+
+// এডমিন ফাংশনালিটি
+function addNewTask() {
+    const title = document.getElementById('tTitle').value;
+    const link = document.getElementById('tLink').value;
+    const reward = Number(document.getElementById('tReward').value);
+
+    if(title && link && reward) {
+        db.ref('tasks').push({ title, link, reward });
+        alert('নতুন কাজ সফলভাবে যোগ করা হয়েছে!');
+        document.getElementById('tTitle').value = "";
+        document.getElementById('tLink').value = "";
+        document.getElementById('tReward').value = "";
+    }
+}
+
+function logout() {
+    auth.signOut();
+    location.reload();
+}
+
+// ইউজারের লগইন স্ট্যাটাস ধরে রাখা
+auth.onAuthStateChanged(user => {
+    if (user) {
+        currentUID = user.uid;
+        loadDashboard();
+    }
+});
 </script>
 </body>
-</html>
+    </html>
