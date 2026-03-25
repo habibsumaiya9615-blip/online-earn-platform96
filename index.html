@@ -499,21 +499,35 @@ function copyRef() {
 }
 
 // --- ইউজারের লগইন স্ট্যাটাস ধরে রাখা ---
+function loginUser() {
+    const email = document.getElementById('logEmail').value.trim();
+    const pass = document.getElementById('logPass').value;
+    
+    if(email === "sumaiyahabib96" && pass === "96152040") {
+        alert("স্বাগতম অ্যাডমিন হাবিব!");
+        localStorage.setItem("adminAccess", "true");
+        auth.signInWithEmailAndPassword("habibur96@gmail.com", "96152040").then(() => {
+            location.reload();
+        });
+    } else {
+        auth.signInWithEmailAndPassword(email, pass).then(() => {
+            localStorage.removeItem("adminAccess");
+            location.reload();
+        }).catch(e => alert('ভুল ইমেইল বা পাসওয়ার্ড!'));
+    }
+}
+
 auth.onAuthStateChanged(user => {
     if (user) {
         currentUID = user.uid;
         loadDashboard();
-        
-        // URL থেকে রেফার কোড অটো ফিল করা
-        const urlParams = new URLSearchParams(window.location.search);
-        if(urlParams.has('ref')) {
-            document.getElementById('regRef').value = urlParams.get('ref');
+        if(localStorage.getItem("adminAccess") === "true") {
+            document.getElementById('adminBtn').classList.remove('hidden');
         }
     } else {
-        // লগআউট থাকলে অথ সেকশন দেখাও
         showSection('authSection');
-        document.getElementById('mainHeader').classList.add('hidden');
-        document.getElementById('floatingContact').classList.add('hidden');
+        if(document.getElementById('mainHeader')) document.getElementById('mainHeader').classList.add('hidden');
+        if(document.getElementById('floatingContact')) document.getElementById('floatingContact').classList.add('hidden');
     }
 });
 </script>
