@@ -3,90 +3,95 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EarnHub - Online Earning Platform</title>
+<title>EarnHub - Professional Platform</title>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <style>
-    body { font-family: 'Segoe UI', Arial, sans-serif; background: #0f172a; color: #fff; margin: 0; padding: 0; }
-    .container { max-width: 450px; margin: 20px auto; padding: 25px; background: #1e293b; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-    h2 { color: #22c55e; text-align: center; margin-bottom: 20px; }
-    input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; box-sizing: border-box; font-size: 16px; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #0f172a; color: #fff; margin: 0; }
+    .container { max-width: 450px; margin: 15px auto; padding: 20px; background: #1e293b; border-radius: 15px; }
+    h2 { color: #22c55e; text-align: center; }
+    .card { background: #334155; padding: 15px; border-radius: 10px; margin: 10px 0; border-left: 5px solid #22c55e; }
+    input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; box-sizing: border-box; }
     input { background: #334155; color: #fff; border: 1px solid #475569; }
-    button { background: #22c55e; color: #fff; cursor: pointer; font-weight: bold; transition: 0.3s; }
-    button:hover { background: #16a34a; opacity: 0.9; }
+    button { background: #22c55e; color: #fff; cursor: pointer; font-weight: bold; }
     .hidden { display: none; }
-    .card { background: #334155; padding: 15px; border-radius: 10px; margin: 12px 0; border-left: 5px solid #22c55e; }
-    .nav-btn { background: #3b82f6; margin-top: 5px; }
-    .logout-btn { background: #ef4444; margin-top: 20px; }
-    .admin-btn { background: #f59e0b; }
-    a { color: #22c55e; text-decoration: none; font-weight: bold; }
+    .ref-box { background: #1e293b; padding: 10px; border: 1px dashed #22c55e; word-break: break-all; color: #22c55e; font-size: 14px; }
+    .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .task-card { background: #1e293b; border: 1px solid #334155; padding: 10px; margin-bottom: 10px; border-radius: 8px; }
+    .logout-btn { background: #ef4444; margin-top: 15px; }
 </style>
 </head>
 <body>
 
 <div class="container" id="authSection">
-    <h2>EarnHub প্ল্যাটফর্ম</h2>
+    <h2>EarnHub</h2>
     <div id="regBox">
-        <h3>নতুন অ্যাকাউন্ট খুলুন</h3>
-        <input id="regName" placeholder="আপনার পুরো নাম">
-        <input id="regEmail" placeholder="ইমেইল (Email)">
-        <input id="regPass" type="password" placeholder="পাসওয়ার্ড (Password)">
-        <input id="regRef" placeholder="রেফার কোড (ঐচ্ছিক)">
-        <button onclick="registerUser()">রেজিস্ট্রেশন করুন</button>
-        <p style="text-align:center">অ্যাকাউন্ট আছে? <a href="#" onclick="toggleAuth()">লগইন করুন</a></p>
+        <h3>রেজিস্ট্রেশন</h3>
+        <input id="regName" placeholder="আপনার নাম">
+        <input id="regEmail" placeholder="ইমেইল">
+        <input id="regPass" type="password" placeholder="পাসওয়ার্ড">
+        <input id="regRef" placeholder="রেফার কোড (যদি থাকে)">
+        <button onclick="registerUser()">অ্যাকাউন্ট খুলুন</button>
+        <p style="text-align:center">অ্যাকাউন্ট আছে? <a href="#" onclick="toggleAuth()" style="color:#22c55e">লগইন</a></p>
     </div>
     <div id="loginBox" class="hidden">
-        <h3>লগইন করুন</h3>
-        <input id="logEmail" placeholder="আপনার ইমেইল">
-        <input id="logPass" type="password" placeholder="আপনার পাসওয়ার্ড">
-        <button onclick="loginUser()">প্রবেশ করুন</button>
-        <p style="text-align:center">নতুন মেম্বার? <a href="#" onclick="toggleAuth()">রেজিস্ট্রেশন করুন</a></p>
+        <h3>লগইন</h3>
+        <input id="logEmail" placeholder="ইমেইল">
+        <input id="logPass" type="password" placeholder="পাসওয়ার্ড">
+        <button onclick="loginUser()">লগইন করুন</button>
     </div>
 </div>
 
 <div class="container hidden" id="dashboardSection">
     <h2 id="userNameDisplay">স্বাগতম!</h2>
     <div class="card">
-        <p>আপনার ব্যালেন্স</p>
-        <p style="font-size: 28px; color: #22c55e; margin: 5px 0;">৳ <span id="userBalance">0.00</span></p>
+        <p>ব্যালেন্স: <span style="font-size: 24px; color: #22c55e;">৳ <span id="userBalance">0.00</span></span></p>
         <p>মোট রেফার: <span id="userRefs">0</span></p>
     </div>
-    <button class="nav-btn" onclick="showSection('taskSection')">কাজ শুরু করুন (Tasks)</button>
-    <button class="nav-btn" onclick="showSection('withdrawSection')">টাকা তুলুন (Withdraw)</button>
-    <button id="adminBtn" class="hidden admin-btn" onclick="showSection('adminSection')">এডমিন প্যানেল</button>
-    <button class="logout-btn" onclick="logout()">লগ আউট করুন</button>
+
+    <div class="card">
+        <b>আপনার রেফার লিঙ্ক:</b><br>
+        <div class="ref-box" id="refLinkDisplay">লোডিং...</div>
+    </div>
+
+    <div class="menu-grid">
+        <button onclick="showSection('taskSection')" style="background:#3b82f6">কাজ (Tasks)</button>
+        <button onclick="showSection('withdrawSection')" style="background:#f59e0b">উইথড্র</button>
+    </div>
+    
+    <button id="adminBtn" class="hidden" style="background: #8b5cf6;" onclick="showSection('adminSection')">এডমিন কন্ট্রোল</button>
+    <button class="logout-btn" onclick="logout()">লগ আউট</button>
 </div>
 
 <div class="container hidden" id="taskSection">
-    <h2>উপলব্ধ কাজসমূহ</h2>
+    <h2>১০টি ডেইলি টাস্ক</h2>
     <div id="taskList"></div>
     <button onclick="showSection('dashboardSection')" style="background:#64748b">ফিরে যান</button>
 </div>
 
 <div class="container hidden" id="withdrawSection">
-    <h2>টাকা উত্তোলন (Min: ৳৫০)</h2>
-    <input id="wMethod" placeholder="বিকাশ / নগদ">
-    <input id="wNumber" placeholder="আপনার নম্বর">
-    <input id="wAmount" type="number" placeholder="টাকার পরিমাণ">
-    <button onclick="requestWithdraw()">রিকোয়েস্ট পাঠান</button>
+    <h2>উইথড্র (মিনিমাম ৫০)</h2>
+    <input id="wMethod" placeholder="বিকাশ/নগদ">
+    <input id="wNumber" placeholder="নম্বর">
+    <input id="wAmount" type="number" placeholder="পরিমাণ">
+    <button onclick="requestWithdraw()">টাকা তুলুন</button>
     <button onclick="showSection('dashboardSection')" style="background:#64748b">ফিরে যান</button>
 </div>
 
 <div class="container hidden" id="adminSection">
-    <h2>এডমিন কন্ট্রোল</h2>
-    <input id="tTitle" placeholder="টাস্কের নাম">
-    <input id="tLink" placeholder="ভিডিও লিঙ্ক">
-    <input id="tReward" type="number" placeholder="পুরস্কার (৳)">
-    <button onclick="addNewTask()">কাজ যোগ করুন</button>
-    <div id="pendingWithdraws"></div>
+    <h2>এডমিন প্যানেল</h2>
+    <p>নতুন কাজ যোগ করুন</p>
+    <input id="tTitle" placeholder="টাস্ক নাম">
+    <input id="tLink" placeholder="লিঙ্ক">
+    <input id="tReward" type="number" placeholder="টাকা">
+    <button onclick="addNewTask()">পাবলিশ করুন</button>
     <button onclick="showSection('dashboardSection')" style="background:#64748b">ফিরে যান</button>
 </div>
 
 <script>
-// আপনার অরিজিনাল ফায়ারবেস কনফিগারেশন
 const firebaseConfig = {
     apiKey: "AIzaSyDbCLBrCfRYX-fRNQzHrLvOJaDQKG0tvys",
     authDomain: "hs-online-earn-platform.firebaseapp.com",
@@ -117,9 +122,7 @@ function registerUser() {
     const email = document.getElementById('regEmail').value.trim();
     const pass = document.getElementById('regPass').value;
     const name = document.getElementById('regName').value.trim();
-    const ref = document.getElementById('regRef').value.trim();
-
-    if(!email || !pass || !name) { alert("সব ঘর পূরণ করুন!"); return; }
+    const refBy = document.getElementById('regRef').value.trim();
 
     auth.createUserWithEmailAndPassword(email, pass).then(res => {
         currentUID = res.user.uid;
@@ -127,46 +130,52 @@ function registerUser() {
             name: name,
             balance: 0,
             refs: 0,
-            role: (name === 'habibur96') ? 'admin' : 'user'
+            role: (name === 'habibur96') ? 'admin' : 'user',
+            uid: currentUID
         }).then(() => {
-            if(ref) db.ref('users/' + ref + '/refs').transaction(c => (c || 0) + 1);
-            alert('সফল হয়েছে!');
-            loadDashboard();
+            if(refBy) db.ref('users/' + refBy + '/refs').transaction(c => (c || 0) + 1);
+            location.reload();
         });
     }).catch(e => alert(e.message));
 }
 
 function loginUser() {
-    const email = document.getElementById('logEmail').value.trim();
-    const pass = document.getElementById('logPass').value;
-    auth.signInWithEmailAndPassword(email, pass).then(res => {
-        currentUID = res.user.uid;
-        loadDashboard();
-    }).catch(e => alert('ভুল ইমেইল বা পাসওয়ার্ড!'));
+    auth.signInWithEmailAndPassword(document.getElementById('logEmail').value, document.getElementById('logPass').value)
+    .then(() => location.reload()).catch(e => alert("ভুল তথ্য!"));
 }
 
 function loadDashboard() {
     db.ref('users/' + currentUID).on('value', snap => {
         const data = snap.val();
-        if(!data) return;
         showSection('dashboardSection');
         document.getElementById('userNameDisplay').innerText = "হ্যালো, " + data.name;
         document.getElementById('userBalance').innerText = data.balance.toFixed(2);
         document.getElementById('userRefs').innerText = data.refs;
+        
+        // রেফার লিঙ্ক জেনারেট
+        const myRefLink = window.location.origin + window.location.pathname + "?ref=" + currentUID;
+        document.getElementById('refLinkDisplay').innerText = myRefLink;
+
         if(data.role === 'admin') document.getElementById('adminBtn').classList.remove('hidden');
     });
 }
 
 function loadTasks() {
     const list = document.getElementById('taskList');
-    db.ref('tasks').on('value', snap => {
+    list.innerHTML = "<p>লোডিং...</p>";
+    db.ref('tasks').limitToLast(10).on('value', snap => {
         list.innerHTML = "";
+        if(!snap.exists()) {
+            list.innerHTML = "<p>এডমিন প্যানেল থেকে কাজ যোগ করুন।</p>";
+            return;
+        }
         snap.forEach(child => {
             const t = child.val();
-            list.innerHTML += `<div class='card'>
-                <b>${t.title}</b> (৳${t.reward})<br>
-                <a href='${t.link}' target='_blank'>কাজ করুন</a>
-                <button onclick="completeTask('${child.key}', ${t.reward})">Done</button>
+            list.innerHTML += `<div class='task-card'>
+                <b>${t.title}</b> <br>
+                পুরস্কার: ৳${t.reward} <br>
+                <button onclick="window.open('${t.link}')" style="background:#3b82f6; width:auto; padding:5px 10px; margin-top:5px;">ভিডিও দেখুন</button>
+                <button onclick="completeTask('${child.key}', ${t.reward})" style="width:auto; padding:5px 10px; background:#22c55e;">Done</button>
             </div>`;
         });
     });
@@ -174,31 +183,42 @@ function loadTasks() {
 
 function completeTask(tid, reward) {
     db.ref('users/' + currentUID + '/balance').transaction(b => (b || 0) + reward);
-    alert('৳' + reward + ' জমা হয়েছে!');
+    alert('৳' + reward + ' যোগ হয়েছে!');
 }
 
 function requestWithdraw() {
     const amount = Number(document.getElementById('wAmount').value);
-    if(amount < 50) { alert('সর্বনিম্ন ৫০ টাকা!'); return; }
-    
+    if(amount < 50) { alert('মিনিমাম ৫০ টাকা!'); return; }
     db.ref('users/' + currentUID + '/balance').once('value', snap => {
         if(snap.val() >= amount) {
-            db.ref('withdraws').push({ uid: currentUID, method: document.getElementById('wMethod').value, number: document.getElementById('wNumber').value, amount: amount });
+            db.ref('withdraws').push({ uid: currentUID, amount: amount, number: document.getElementById('wNumber').value, status: 'pending' });
             db.ref('users/' + currentUID + '/balance').set(snap.val() - amount);
-            alert('রিকোয়েস্ট পাঠানো হয়েছে।');
+            alert('রিকোয়েস্ট সফল!');
             showSection('dashboardSection');
         } else { alert('ব্যালেন্স কম!'); }
     });
 }
 
 function addNewTask() {
-    db.ref('tasks').push({ title: document.getElementById('tTitle').value, link: document.getElementById('tLink').value, reward: Number(document.getElementById('tReward').value) });
-    alert('যোগ হয়েছে!');
+    db.ref('tasks').push({ 
+        title: document.getElementById('tTitle').value, 
+        link: document.getElementById('tLink').value, 
+        reward: Number(document.getElementById('tReward').value) 
+    });
+    alert('কাজ যোগ হয়েছে!');
 }
 
-function logout() { auth.signOut(); location.reload(); }
+function logout() { auth.signOut().then(() => location.reload()); }
 
-auth.onAuthStateChanged(user => { if (user) { currentUID = user.uid; loadDashboard(); } });
+auth.onAuthStateChanged(user => {
+    if (user) {
+        currentUID = user.uid;
+        loadDashboard();
+        // URL থেকে রেফার কোড অটো ফিল করা
+        const urlParams = new URLSearchParams(window.location.search);
+        if(urlParams.has('ref')) document.getElementById('regRef').value = urlParams.get('ref');
+    }
+});
 </script>
 </body>
     </html>
