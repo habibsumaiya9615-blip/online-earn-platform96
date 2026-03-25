@@ -1,311 +1,108 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Online Earn Platform</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EarnHub - Admin Master</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --primary: #3b82f6; --bg: #0f172a; --card: #1e293b; --text: #ffffff; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background-color: var(--bg); color: var(--text); }
+        .hidden { display: none !important; }
+        
+        /* Header */
+        .header { background: var(--primary); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: fixed; top:0; width:100%; z-index:100; box-sizing: border-box; }
+        
+        /* Layouts */
+        .container { padding: 80px 20px 20px; max-width: 500px; margin: auto; }
+        .card { background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        
+        /* Inputs & Buttons */
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; background: #334155; color: white; box-sizing: border-box;}
+        .btn { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 5px; }
+        .btn-blue { background: var(--primary); color: white; }
+        .btn-green { background: #22c55e; color: white; }
+        .btn-red { background: #ef4444; color: white; }
 
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+        /* Task Item (Black Style) */
+        .task-item { background: #000; padding: 15px; border-radius: 10px; display: flex; justify-content: space-between; margin-bottom: 10px; cursor: pointer; border: 1px solid #334155; }
+        
+        /* Admin Search Box */
+        .search-container { background: #1e293b; padding: 15px; border-radius: 10px; border: 1px solid var(--primary); }
+        .user-details { background: #0f172a; padding: 10px; border-radius: 8px; margin-top: 10px; font-size: 14px; line-height: 1.6; border-left: 4px solid var(--primary); }
 
-<style>
-    /* মেইন ডিজাইন (আপনার স্ক্রিনশট অনুযায়ী) */
-    :root {
-        --primary-color: #3b82f6; /* নীল হেডার */
-        --bg-color: #f1f5f9; /* হালকা ব্যাকগ্রাউন্ড */
-        --text-color: #1e293b;
-        --card-bg: #ffffff;
-    }
-
-    body {
-        font-family: 'Segoe UI', Arial, sans-serif;
-        margin: 0;
-        padding: 0;
-        background-color: var(--bg-color);
-        color: var(--text-color);
-        overflow-x: hidden;
-    }
-
-    /* হেডার ডিজাইন */
-    .header {
-        background-color: var(--primary-color);
-        color: white;
-        padding: 10px 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        position: fixed;
-        top: 0;
-        width: 100%;
-        z-index: 1000;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        box-sizing: border-box;
-    }
-
-    .header-logo {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-size: 18px;
-        font-weight: bold;
-    }
-
-    .header-logo img {
-        width: 35px;
-        height: 35px;
-        border-radius: 50%;
-        background: white;
-        padding: 2px;
-    }
-
-    .menu-icon {
-        font-size: 24px;
-        cursor: pointer;
-    }
-
-    /* সাইড মেনু (Drawer) */
-    .sidebar {
-        height: 100%;
-        width: 0;
-        position: fixed;
-        z-index: 1001;
-        top: 0;
-        right: 0;
-        background-color: var(--primary-color);
-        overflow-x: hidden;
-        transition: 0.3s;
-        padding-top: 60px;
-        box-shadow: -2px 0 5px rgba(0,0,0,0.2);
-    }
-
-    .sidebar a, .sidebar-link {
-        padding: 15px 25px;
-        text-decoration: none;
-        font-size: 16px;
-        color: white;
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        transition: 0.3s;
-        cursor: pointer;
-    }
-
-    .sidebar a:hover, .sidebar-link:hover {
-        background-color: rgba(255,255,255,0.1);
-    }
-
-    .sidebar .closebtn {
-        position: absolute;
-        top: 10px;
-        left: 20px;
-        font-size: 36px;
-        color: white;
-        cursor: pointer;
-    }
-
-    /* কন্টেন্ট এরিয়া */
-    .main-content {
-        margin-top: 70px;
-        padding: 20px;
-        padding-bottom: 80px; /* ফ্লোটিং বাটনের জন্য */
-    }
-
-    /* কার্ড ডিজাইন */
-    .card {
-        background-color: var(--card-bg);
-        border-radius: 10px;
-        padding: 20px;
-        margin-bottom: 15px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    }
-
-    .balance-card {
-        background: linear-gradient(135deg, #6dd5ed, #2193b0);
-        color: white;
-        text-align: center;
-    }
-
-    /* অথেন্টিকেশন এবং সাধারণ ফর্ম */
-    .auth-container {
-        max-width: 400px;
-        margin: 100px auto;
-        padding: 30px;
-        background: white;
-        border-radius: 15px;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-        text-align: center;
-    }
-
-    input {
-        width: 100%;
-        padding: 12px;
-        margin: 10px 0;
-        border-radius: 8px;
-        border: 1px solid #ddd;
-        box-sizing: border-box;
-    }
-
-    .btn {
-        width: 100%;
-        padding: 12px;
-        border: none;
-        border-radius: 8px;
-        font-weight: bold;
-        cursor: pointer;
-        transition: 0.3s;
-        margin-top: 10px;
-    }
-
-    .btn-primary { background-color: var(--primary-color); color: white; }
-    .btn-primary:hover { opacity: 0.9; }
-    .btn-success { background-color: #22c55e; color: white; }
-    .btn-danger { background-color: #ef4444; color: white; margin-top: 20px; }
-
-    /* টাস্ক লিস্ট ডিজাইন (image_6.png অনুযায়ী) */
-    .task-item {
-        background-color: black;
-        color: white;
-        padding: 15px 20px;
-        border-radius: 8px;
-        margin-bottom: 10px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-weight: bold;
-        text-decoration: none;
-        cursor: pointer;
-    }
-
-    .task-item:hover { opacity: 0.8; }
-
-    /* ফ্লোটিং কন্টাক্ট বাটন */
-    .floating-btn {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        background-color: #22c55e;
-        color: white;
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 24px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        cursor: pointer;
-        z-index: 999;
-        text-decoration: none;
-    }
-
-    .hidden { display: none !important; }
-    .ref-box { background: #e2e8f0; padding: 10px; border-radius: 5px; word-break: break-all; margin-top: 5px; color: #1e3a8a; font-size: 14px;}
-</style>
+        /* Sidebar */
+        .sidebar { height: 100%; width: 0; position: fixed; z-index: 1001; top: 0; right: 0; background: var(--primary); overflow-x: hidden; transition: 0.3s; padding-top: 60px; }
+        .sidebar a { padding: 15px 25px; text-decoration: none; font-size: 18px; color: white; display: block; }
+    </style>
 </head>
 <body>
 
 <div class="header hidden" id="mainHeader">
-    <div class="header-logo">
-        <img src="https://i.imgur.com/8kX7W0D.png" alt="Logo"> <span>Online Earn Platform</span>
-    </div>
-    <div class="menu-icon" onclick="openNav()">
-        <i class="fas fa-bars"></i>
-    </div>
+    <div style="font-weight: bold;">EarnHub Pro</div>
+    <div onclick="openNav()"><i class="fas fa-bars"></i></div>
 </div>
 
 <div id="mySidebar" class="sidebar">
-    <span class="closebtn" onclick="closeNav()">&times;</span>
-    <div class="sidebar-link" onclick="showSection('dashboardSection'); closeNav();"><i class="fas fa-home"></i> Home</div>
-    <div class="sidebar-link" onclick="showSection('taskSection'); closeNav();"><i class="fas fa-tasks"></i> All Work</div>
-    <div class="sidebar-link" onclick="showSection('withdrawSection'); closeNav();"><i class="fas fa-money-bill-wave"></i> Withdraw</div>
-    <a href="#" target="_blank"><i class="fas fa-check-circle"></i> Payment Proof</a>
-    <a href="#" target="_blank"><i class="fas fa-headset"></i> Admin Support</a>
-    <div class="sidebar-link logout-btn-menu" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Log Out</div>
+    <a href="javascript:void(0)" onclick="closeNav()" style="font-size:30px;">&times;</a>
+    <a href="#" onclick="showSection('dash'); closeNav()">Home</a>
+    <a href="#" onclick="showSection('tasks'); closeNav()">All Work</a>
+    <a href="#" onclick="showSection('admin'); closeNav()" id="adminLink" class="hidden">Admin Panel</a>
+    <a href="#" onclick="logout()">Logout</a>
 </div>
 
-<div class="main-content">
-
-    <div class="auth-container" id="authSection">
-        <h2 style="color: var(--primary-color);">EarnHub</h2>
-        <div id="regBox">
-            <h3>রেজিস্ট্রেশন</h3>
-            <input id="regName" placeholder="আপনার নাম">
-            <input id="regEmail" placeholder="ইমেইল">
-            <input id="regPass" type="password" placeholder="পাসওয়ার্ড">
-            <input id="regRef" placeholder="রেফার কোড (ঐচ্ছিক)">
-            <button class="btn btn-primary" onclick="registerUser()">অ্যাকাউন্ট খুলুন</button>
-            <p>আছে? <a href="#" onclick="toggleAuth()" style="color:var(--primary-color)">লগইন</a></p>
-        </div>
-        <div id="loginBox" class="hidden">
-            <h3>লগইন</h3>
-            <input id="logEmail" placeholder="ইমেইল">
-            <input id="logPass" type="password" placeholder="পাসওয়ার্ড">
-            <button class="btn btn-primary" onclick="loginUser()">লগইন করুন</button>
-            <p>নতুন? <a href="#" onclick="toggleAuth()" style="color:var(--primary-color)">রেজিস্ট্রেশন</a></p>
-        </div>
+<div class="container">
+    <div id="authSection" class="card">
+        <h2 style="text-align:center;">লগইন করুন</h2>
+        <input id="email" placeholder="ইমেইল বা ইউজারনেম">
+        <input id="pass" type="password" placeholder="পাসওয়ার্ড">
+        <button class="btn btn-blue" onclick="handleLogin()">প্রবেশ করুন</button>
     </div>
 
-    <div class="hidden" id="dashboardSection">
-        <div class="card balance-card">
-            <h3 id="userNameDisplay">হ্যালো, ইউজার!</h3>
+    <div id="dashSection" class="hidden">
+        <div class="card" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); text-align: center;">
+            <h3 id="uName">হ্যালো!</h3>
             <p>আপনার ব্যালেন্স</p>
-            <h1 style="margin: 10px 0;">৳ <span id="userBalance">0.00</span></h1>
-            <p>মোট রেফার: <span id="userRefs">0</span></p>
+            <h1>৳ <span id="uBalance">0.00</span></h1>
+        </div>
+        <div class="card">
+            <p>রেফার লিঙ্ক:</p>
+            <div id="refLink" style="font-size:12px; background:#0f172a; padding:10px; border-radius:5px; word-break:break-all;">loading...</div>
+            <button class="btn btn-green" onclick="copyRef()">কপি করুন</button>
+        </div>
+        <button class="btn btn-blue" onclick="showSection('tasks')">কাজ শুরু করুন (All Work)</button>
+    </div>
+
+    <div id="taskSection" class="hidden">
+        <h3 style="text-align:center;">আমাদের কাজসমূহ</h3>
+        <div id="taskList"></div>
+        <button class="btn btn-red" onclick="showSection('dash')">ফিরে যান</button>
+    </div>
+
+    <div id="adminSection" class="hidden">
+        <div class="card search-container">
+            <h4><i class="fas fa-search"></i> ইউজার খুঁজুন</h4>
+            <input id="searchQuery" placeholder="নাম বা ইমেইল লিখুন...">
+            <button class="btn btn-blue" onclick="searchUser()">সার্চ করুন</button>
+            <div id="searchResult" class="user-details hidden"></div>
         </div>
 
         <div class="card">
-            <h4><i class="fas fa-share-alt" style="color:var(--primary-color)"></i> আপনার রেফার লিঙ্ক</h4>
-            <div class="ref-box" id="refLinkDisplay">লোডিং...</div>
-            <button class="btn btn-success" style="margin-top:10px;" onclick="copyRef()">লিঙ্ক কপি করুন</button>
+            <h4>নতুন কাজ যোগ করুন</h4>
+            <input id="tTitle" placeholder="কাজের নাম">
+            <input id="tLink" placeholder="কাজের লিঙ্ক">
+            <input id="tReward" type="number" placeholder="টাকার পরিমাণ">
+            <button class="btn btn-green" onclick="addTask()">পাবলিশ করুন</button>
         </div>
-        
-        <button class="btn btn-primary" onclick="showSection('taskSection')">কাজ শুরু করুন (Tasks)</button>
-        
-        <button id="adminBtn" class="hidden btn" style="background-color: #8b5cf6; color:white; margin-top:10px;" onclick="showSection('adminSection')">এডমিন প্যানেল</button>
+        <button class="btn btn-red" onclick="showSection('dash')">ফিরে যান</button>
     </div>
-
-    <div class="hidden" id="taskSection">
-        <h2 style="text-align:center; color: var(--primary-color);">আমাদের কাজসমূহ</h2>
-        <p style="text-align:center; font-size:14px; color:#64748b;">🎥 কাজ শুরু করতে নিচের বাটনে ক্লিক করুন।</p>
-        <div id="taskList">
-            </div>
-        <button class="btn btn-primary" style="background-color:#64748b" onclick="showSection('dashboardSection')">ফিরে যান</button>
-    </div>
-
-    <div class="hidden" id="withdrawSection">
-        <div class="card">
-            <h3>টাকা উত্তোলন</h3>
-            <p style="color:#64748b;">মিনিমাম উইথড্র: ৳৫০</p>
-            <input id="wMethod" placeholder="বিকাশ / নগদ">
-            <input id="wNumber" placeholder="আপনার নম্বর">
-            <input id="wAmount" type="number" placeholder="টাকার পরিমাণ">
-            <button class="btn btn-success" onclick="requestWithdraw()">উইথড্র রিকোয়েস্ট পাঠান</button>
-        </div>
-        <button class="btn btn-primary" style="background-color:#64748b" onclick="showSection('dashboardSection')">ফিরে যান</button>
-    </div>
-
-    <div class="hidden" id="adminSection">
-        <div class="card">
-            <h3>নতুন কাজ যোগ করুন</h3>
-            <input id="tTitle" placeholder="কাজের নাম (যেমন: Facebook Like)">
-            <input id="tLink" placeholder="ভিডিও/কাজের লিঙ্ক">
-            <input id="tReward" type="number" placeholder="পুরস্কার (৳)">
-            <button class="btn btn-primary" onclick="addNewTask()">কাজ পাবলিশ করুন</button>
-        </div>
-        <button class="btn btn-primary" style="background-color:#64748b" onclick="showSection('dashboardSection')">ফিরে যান</button>
-    </div>
-
 </div>
-
-<a href="https://t.me/yourusername" target="_blank" class="floating-btn hidden" id="floatingContact">
-    <i class="fab fa-telegram-plane"></i>
-</a>
 
 <script>
-// *** আপনার সঠিক ফায়ারবেস কনফিগারেশন ***
 const firebaseConfig = {
     apiKey: "AIzaSyDbCLBrCfRYX-fRNQzHrLvOJaDQKG0tvys",
     authDomain: "hs-online-earn-platform.firebaseapp.com",
@@ -316,220 +113,126 @@ const firebaseConfig = {
     appId: "1:850821097967:web:f68872d834964de2e52e1a"
 };
 
-// Initialize Firebase
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
+firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.database();
-let currentUID;
 
-// --- সাইড মেনু ফাংশন ---
-function openNav() { document.getElementById("mySidebar").style.width = "250px"; }
-function closeNav() { document.getElementById("mySidebar").style.width = "0"; }
-
-// --- ইন্টারফেস কন্ট্রোল ---
 function showSection(id) {
-    // সব কন্টেন্ট লুকাও
     document.getElementById('authSection').classList.add('hidden');
-    document.getElementById('dashboardSection').classList.add('hidden');
+    document.getElementById('dashSection').classList.add('hidden');
     document.getElementById('taskSection').classList.add('hidden');
-    document.getElementById('withdrawSection').classList.add('hidden');
     document.getElementById('adminSection').classList.add('hidden');
     
-    // নির্দিষ্ট সেকশন দেখাও
-    document.getElementById(id).classList.remove('hidden');
-    
-    // টাস্ক লোড করো
-    if(id === 'taskSection') loadTasks();
+    if(id==='dash') document.getElementById('dashSection').classList.remove('hidden');
+    if(id==='tasks') { document.getElementById('taskSection').classList.remove('hidden'); loadTasks(); }
+    if(id==='admin') document.getElementById('adminSection').classList.remove('hidden');
 }
 
-function toggleAuth() {
-    document.getElementById('regBox').classList.toggle('hidden');
-    document.getElementById('loginBox').classList.toggle('hidden');
-}
+function handleLogin() {
+    const e = document.getElementById('email').value.trim();
+    const p = document.getElementById('pass').value;
 
-// --- ফায়ারবেস অথেন্টিকেশন ---
-function registerUser() {
-    const email = document.getElementById('regEmail').value.trim();
-    const pass = document.getElementById('regPass').value;
-    const name = document.getElementById('regName').value.trim();
-    const refBy = document.getElementById('regRef').value.trim();
-
-    if(!email || !pass || !name) { alert("সব ঘর পূরণ করুন!"); return; }
-
-    auth.createUserWithEmailAndPassword(email, pass).then(res => {
-        currentUID = res.user.uid;
-        db.ref('users/' + currentUID).set({
-            name: name,
-            balance: 0,
-            refs: 0,
-            role: (name === 'habibur96') ? 'admin' : 'user', // habibur96 নাম হলে এডমিন
-            uid: currentUID
-        }).then(() => {
-            if(refBy) {
-                // রেফারাল বোনাস (ঐচ্ছিক: আমরা শুধু রেফার সংখ্যা বাড়াচ্ছি)
-                db.ref('users/' + refBy + '/refs').transaction(c => (c || 0) + 1);
-            }
-            alert('রেজিস্ট্রেশন সফল হয়েছে!');
-            location.reload(); // পেজ রিফ্রেশ করে ড্যাশবোর্ডে যাবে
-        });
-    }).catch(e => alert("ভুল ইমেইল বা পাসওয়ার্ড: " + e.message));
-}
-
-function loginUser() {
-    const email = document.getElementById('logEmail').value.trim();
-    const pass = document.getElementById('logPass').value;
-    auth.signInWithEmailAndPassword(email, pass).then(() => {
-        location.reload();
-    }).catch(e => alert('ইমেইল বা পাসওয়ার্ড সঠিক নয়!'));
-}
-
-function logout() {
-    auth.signOut().then(() => {
-        location.reload();
-    });
-}
-
-// --- ড্যাশবোর্ড এবং ডাটা লোড ---
-function loadDashboard() {
-    db.ref('users/' + currentUID).on('value', snap => {
-        const data = snap.val();
-        if(!data) return;
-        
-        // হেডার এবং ফ্লোটিং বাটন দেখাও
-        document.getElementById('mainHeader').classList.remove('hidden');
-        document.getElementById('floatingContact').classList.remove('hidden');
-        
-        showSection('dashboardSection');
-        
-        document.getElementById('userNameDisplay').innerText = "হ্যালো, " + data.name + "!";
-        document.getElementById('userBalance').innerText = data.balance.toFixed(2);
-        document.getElementById('userRefs').innerText = data.refs;
-        
-        // রেফার লিঙ্ক জেনারেট
-        const myRefLink = window.location.origin + window.location.pathname + "?ref=" + currentUID;
-        document.getElementById('refLinkDisplay').innerText = myRefLink;
-        
-        // এডমিন চেক
-        if(data.role === 'admin') {
-            document.getElementById('adminBtn').classList.remove('hidden');
-        }
-    });
-}
-
-// --- টাস্ক সিস্টেম (image_6.png ডিজাইন) ---
-function loadTasks() {
-    const list = document.getElementById('taskList');
-    list.innerHTML = "<p style='text-align:center;'>কাজের তালিকা লোড হচ্ছে...</p>";
-    
-    db.ref('tasks').on('value', snap => {
-        list.innerHTML = "";
-        if(!snap.exists()) {
-            list.innerHTML = "<p style='text-align:center; color:#64748b;'>আপাতত কোনো কাজ নেই। এডমিন প্যানেল থেকে কাজ যোগ করুন।</p>";
-            return;
-        }
-        
-        let count = 1;
-        snap.forEach(child => {
-            const t = child.val();
-            // image_6.png এর মতো কালো বাটন ডিজাইন
-            list.innerHTML += `<div class="task-item" onclick="openTask('${t.link}', '${child.key}', ${t.reward})">
-                <span>${count}. ${t.title}</span>
-                <i class="fas fa-coins" style="color:#f59e0b"></i>
-            </div>`;
-            count++;
-        });
-    });
-}
-
-function openTask(link, tid, reward) {
-    window.open(link, '_blank');
-    // টাস্ক কমপ্লিট করার জন্য একটি কনফার্মেশন (ঐচ্ছিক)
-    if(confirm('আপনি কি কাজটি সফলভাবে শেষ করেছেন?')){
-        completeTask(tid, reward);
-    }
-}
-
-function completeTask(tid, reward) {
-    db.ref('users/' + currentUID + '/balance').transaction(b => (b || 0) + reward);
-    alert('অভিনন্দন! আপনার অ্যাকাউন্টে ৳' + reward + ' যোগ হয়েছে।');
-}
-
-// --- উইথড্র সিস্টেম ---
-function requestWithdraw() {
-    const amount = Number(document.getElementById('wAmount').value);
-    const method = document.getElementById('wMethod').value;
-    const num = document.getElementById('wNumber').value;
-
-    if(amount < 50) { alert('দুঃখিত! সর্বনিম্ন ৫০ টাকা হতে হবে।'); return; }
-    if(!method || !num) { alert('বিকাশ/নগদ এবং নম্বর লিখুন।'); return; }
-
-    db.ref('users/' + currentUID + '/balance').once('value', snap => {
-        if(snap.val() >= amount) {
-            db.ref('withdraws').push({ uid: currentUID, method, num, amount, status: 'pending', time: Date.now() });
-            db.ref('users/' + currentUID + '/balance').set(snap.val() - amount);
-            alert('আপনার রিকোয়েস্টটি এডমিনের কাছে পাঠানো হয়েছে।');
-            showSection('dashboardSection');
-        } else { alert('আপনার অ্যাকাউন্টে পর্যাপ্ত ব্যালেন্স নেই!'); }
-    });
-}
-
-// --- এডমিন ফাংশন ---
-function addNewTask() {
-    const title = document.getElementById('tTitle').value;
-    const link = document.getElementById('tLink').value;
-    const reward = Number(document.getElementById('tReward').value);
-
-    if(title && link && reward) {
-        db.ref('tasks').push({ title, link, reward });
-        alert('নতুন কাজ সফলভাবে যোগ হয়েছে!');
-        document.getElementById('tTitle').value = "";
-        document.getElementById('tLink').value = "";
-        document.getElementById('tReward').value = "";
-    } else { alert('সব ঘর পূরণ করুন!'); }
-}
-
-// --- রেফার লিঙ্ক কপি ---
-function copyRef() {
-    const refLink = document.getElementById('refLinkDisplay').innerText;
-    navigator.clipboard.writeText(refLink).then(() => {
-        alert("রেফার লিঙ্ক কপি হয়েছে!");
-    });
-}
-
-// --- ইউজারের লগইন স্ট্যাটাস ধরে রাখা ---
-function loginUser() {
-    const email = document.getElementById('logEmail').value.trim();
-    const pass = document.getElementById('logPass').value;
-    
-    if(email === "sumaiyahabib96" && pass === "96152040") {
-        alert("স্বাগতম অ্যাডমিন হাবিব!");
-        localStorage.setItem("adminAccess", "true");
-        auth.signInWithEmailAndPassword("habibur96@gmail.com", "96152040").then(() => {
+    if(e === "sumaiyahabib9615@gmail.com" && p === "96152040") {
+        auth.signInWithEmailAndPassword(e, p).then(() => {
+            localStorage.setItem("role", "admin");
             location.reload();
-        });
+        }).catch(() => alert("অ্যাডমিন অ্যাকাউন্ট ফায়ারবেসে নেই!"));
     } else {
-        auth.signInWithEmailAndPassword(email, pass).then(() => {
-            localStorage.removeItem("adminAccess");
+        auth.signInWithEmailAndPassword(e, p).then(() => {
+            localStorage.setItem("role", "user");
             location.reload();
-        }).catch(e => alert('ভুল ইমেইল বা পাসওয়ার্ড!'));
+        }).catch(err => alert("ভুল তথ্য!"));
     }
 }
 
 auth.onAuthStateChanged(user => {
-    if (user) {
-        currentUID = user.uid;
-        loadDashboard();
-        if(localStorage.getItem("adminAccess") === "true") {
-            document.getElementById('adminBtn').classList.remove('hidden');
-        }
+    if(user) {
+        document.getElementById('mainHeader').classList.remove('hidden');
+        showSection('dash');
+        loadData(user.uid);
+        if(localStorage.getItem("role") === "admin") document.getElementById('adminLink').classList.remove('hidden');
     } else {
-        showSection('authSection');
-        if(document.getElementById('mainHeader')) document.getElementById('mainHeader').classList.add('hidden');
-        if(document.getElementById('floatingContact')) document.getElementById('floatingContact').classList.add('hidden');
+        document.getElementById('authSection').classList.remove('hidden');
     }
 });
+
+function loadData(uid) {
+    db.ref('users/' + uid).on('value', s => {
+        const d = s.val();
+        if(d) {
+            document.getElementById('uName').innerText = "হ্যালো, " + d.name;
+            document.getElementById('uBalance').innerText = d.balance.toFixed(2);
+            document.getElementById('refLink').innerText = window.location.origin + "?ref=" + uid;
+        }
+    });
+}
+
+function loadTasks() {
+    const list = document.getElementById('taskList');
+    list.innerHTML = "লোড হচ্ছে...";
+    db.ref('tasks').on('value', s => {
+        list.innerHTML = "";
+        s.forEach(c => {
+            const t = c.val();
+            list.innerHTML += `<div class="task-item" onclick="doTask('${t.link}', '${c.key}', ${t.reward})">
+                <span>${t.title}</span>
+                <span style="color:#22c55e">৳${t.reward}</span>
+            </div>`;
+        });
+    });
+}
+
+function doTask(link, id, reward) {
+    window.open(link, '_blank');
+    if(confirm("কাজটি শেষ করেছেন?")){
+        db.ref('users/' + auth.currentUser.uid + '/balance').transaction(b => (b||0) + reward);
+        alert("টাকা যোগ হয়েছে!");
+    }
+}
+
+// --- অ্যাডমিন সার্চ বক্স ফাংশন ---
+function searchUser() {
+    const q = document.getElementById('searchQuery').value.toLowerCase();
+    const resDiv = document.getElementById('searchResult');
+    resDiv.classList.add('hidden');
+    
+    db.ref('users').once('value', s => {
+        let found = false;
+        s.forEach(child => {
+            const u = child.val();
+            if(u.email?.toLowerCase().includes(q) || u.name?.toLowerCase().includes(q)) {
+                resDiv.innerHTML = `
+                    <strong>নাম:</strong> ${u.name}<br>
+                    <strong>ইমেইল:</strong> ${u.email || 'N/A'}<br>
+                    <strong>ব্যালেন্স:</strong> ৳${u.balance.toFixed(2)}<br>
+                    <strong>মোট রেফার:</strong> ${u.refs || 0}<br>
+                    <strong>ইউজার আইডি:</strong> ${child.key}
+                `;
+                resDiv.classList.remove('hidden');
+                found = true;
+            }
+        });
+        if(!found) alert("এই নামে কোনো ইউজার পাওয়া যায়নি!");
+    });
+}
+
+function addTask() {
+    const title = document.getElementById('tTitle').value;
+    const link = document.getElementById('tLink').value;
+    const reward = Number(document.getElementById('tReward').value);
+    if(title && link && reward) {
+        db.ref('tasks').push({title, link, reward});
+        alert("টাস্ক অ্যাড হয়েছে!");
+    }
+}
+
+function logout() { auth.signOut().then(() => location.reload()); }
+function openNav() { document.getElementById("mySidebar").style.width = "250px"; }
+function closeNav() { document.getElementById("mySidebar").style.width = "0"; }
+function copyRef() {
+    const link = document.getElementById('refLink').innerText;
+    navigator.clipboard.writeText(link).then(() => alert("কপি হয়েছে!"));
+}
 </script>
 </body>
 </html>
