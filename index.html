@@ -1,238 +1,248 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EarnHub - Admin Master</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HS Earn Platform</title>
 
-    <style>
-        :root { --primary: #3b82f6; --bg: #0f172a; --card: #1e293b; --text: #ffffff; }
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background-color: var(--bg); color: var(--text); }
-        .hidden { display: none !important; }
-        
-        /* Header */
-        .header { background: var(--primary); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: fixed; top:0; width:100%; z-index:100; box-sizing: border-box; }
-        
-        /* Layouts */
-        .container { padding: 80px 20px 20px; max-width: 500px; margin: auto; }
-        .card { background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        
-        /* Inputs & Buttons */
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; background: #334155; color: white; box-sizing: border-box;}
-        .btn { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 5px; }
-        .btn-blue { background: var(--primary); color: white; }
-        .btn-green { background: #22c55e; color: white; }
-        .btn-red { background: #ef4444; color: white; }
+<!-- Firebase v8 SDK -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
-        /* Task Item (Black Style) */
-        .task-item { background: #000; padding: 15px; border-radius: 10px; display: flex; justify-content: space-between; margin-bottom: 10px; cursor: pointer; border: 1px solid #334155; }
-        
-        /* Admin Search Box */
-        .search-container { background: #1e293b; padding: 15px; border-radius: 10px; border: 1px solid var(--primary); }
-        .user-details { background: #0f172a; padding: 10px; border-radius: 8px; margin-top: 10px; font-size: 14px; line-height: 1.6; border-left: 4px solid var(--primary); }
-
-        /* Sidebar */
-        .sidebar { height: 100%; width: 0; position: fixed; z-index: 1001; top: 0; right: 0; background: var(--primary); overflow-x: hidden; transition: 0.3s; padding-top: 60px; }
-        .sidebar a { padding: 15px 25px; text-decoration: none; font-size: 18px; color: white; display: block; }
-    </style>
+<style>
+body{background:#0f172a;color:#fff;font-family:sans-serif}
+.box{max-width:400px;margin:auto;padding:15px;background:#1e293b;margin-top:20px;border-radius:10px}
+input,button{width:100%;padding:10px;margin:5px 0;border-radius:8px;border:none}
+button{background:#22c55e;color:#fff}
+.card{background:#334155;padding:10px;margin:5px 0;border-radius:8px}
+.hidden{display:none}
+</style>
 </head>
 <body>
 
-<div class="header hidden" id="mainHeader">
-    <div style="font-weight: bold;">EarnHub Pro</div>
-    <div onclick="openNav()"><i class="fas fa-bars"></i></div>
+<!-- AUTH -->
+<div class="box" id="auth">
+<h3>Register</h3>
+<input id="name" placeholder="Name">
+<input id="email" placeholder="Email">
+<input id="pass" type="password" placeholder="Password">
+<input id="ref" placeholder="Referral UID (Optional)">
+<button onclick="register()">Register</button>
+
+<h3>Login</h3>
+<input id="lEmail" placeholder="Email">
+<input id="lPass" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
 </div>
 
-<div id="mySidebar" class="sidebar">
-    <a href="javascript:void(0)" onclick="closeNav()" style="font-size:30px;">&times;</a>
-    <a href="#" onclick="showSection('dash'); closeNav()">Home</a>
-    <a href="#" onclick="showSection('tasks'); closeNav()">All Work</a>
-    <a href="#" onclick="showSection('admin'); closeNav()" id="adminLink" class="hidden">Admin Panel</a>
-    <a href="#" onclick="logout()">Logout</a>
+<!-- DASHBOARD -->
+<div class="box hidden" id="dash">
+<h3 id="welcome"></h3>
+<p>Balance: ৳ <span id="bal">0</span></p>
+<button onclick="openTasks()">Tasks</button>
+<button onclick="openWithdraw()">Withdraw</button>
+<button onclick="openAdmin()">Admin</button>
+<button onclick="logout()">Logout</button>
 </div>
 
-<div class="container">
-    <div id="authSection" class="card">
-        <h2 style="text-align:center;">লগইন করুন</h2>
-        <input id="email" placeholder="ইমেইল বা ইউজারনেম">
-        <input id="pass" type="password" placeholder="পাসওয়ার্ড">
-        <button class="btn btn-blue" onclick="handleLogin()">প্রবেশ করুন</button>
-    </div>
+<!-- TASKS -->
+<div class="box hidden" id="taskBox">
+<h3>Tasks</h3>
+<div id="taskList"></div>
+<button onclick="back()">Back</button>
+</div>
 
-    <div id="dashSection" class="hidden">
-        <div class="card" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); text-align: center;">
-            <h3 id="uName">হ্যালো!</h3>
-            <p>আপনার ব্যালেন্স</p>
-            <h1>৳ <span id="uBalance">0.00</span></h1>
-        </div>
-        <div class="card">
-            <p>রেফার লিঙ্ক:</p>
-            <div id="refLink" style="font-size:12px; background:#0f172a; padding:10px; border-radius:5px; word-break:break-all;">loading...</div>
-            <button class="btn btn-green" onclick="copyRef()">কপি করুন</button>
-        </div>
-        <button class="btn btn-blue" onclick="showSection('tasks')">কাজ শুরু করুন (All Work)</button>
-    </div>
+<!-- WITHDRAW -->
+<div class="box hidden" id="withBox">
+<h3>Withdraw</h3>
+<input id="m" placeholder="bKash/Nagad">
+<input id="n" placeholder="Number">
+<input id="a" placeholder="Amount">
+<button onclick="req()">Request</button>
+<button onclick="back()">Back</button>
+</div>
 
-    <div id="taskSection" class="hidden">
-        <h3 style="text-align:center;">আমাদের কাজসমূহ</h3>
-        <div id="taskList"></div>
-        <button class="btn btn-red" onclick="showSection('dash')">ফিরে যান</button>
-    </div>
+<!-- ADMIN PANEL -->
+<div class="box hidden" id="admin">
+<h3>Admin Panel</h3>
 
-    <div id="adminSection" class="hidden">
-        <div class="card search-container">
-            <h4><i class="fas fa-search"></i> ইউজার খুঁজুন</h4>
-            <input id="searchQuery" placeholder="নাম বা ইমেইল লিখুন...">
-            <button class="btn btn-blue" onclick="searchUser()">সার্চ করুন</button>
-            <div id="searchResult" class="user-details hidden"></div>
-        </div>
+<input id="t" placeholder="Task Title">
+<input id="l" placeholder="Video Link">
+<input id="r" placeholder="Reward">
+<button onclick="addTask()">Add Task</button>
 
-        <div class="card">
-            <h4>নতুন কাজ যোগ করুন</h4>
-            <input id="tTitle" placeholder="কাজের নাম">
-            <input id="tLink" placeholder="কাজের লিঙ্ক">
-            <input id="tReward" type="number" placeholder="টাকার পরিমাণ">
-            <button class="btn btn-green" onclick="addTask()">পাবলিশ করুন</button>
-        </div>
-        <button class="btn btn-red" onclick="showSection('dash')">ফিরে যান</button>
-    </div>
+<h4>Withdraw Requests</h4>
+<div id="wList"></div>
+<button onclick="back()">Back</button>
 </div>
 
 <script>
-const firebaseConfig = {
-    apiKey: "AIzaSyDbCLBrCfRYX-fRNQzHrLvOJaDQKG0tvys",
-    authDomain: "hs-online-earn-platform.firebaseapp.com",
-    databaseURL: "https://hs-online-earn-platform-default-rtdb.firebaseio.com",
-    projectId: "hs-online-earn-platform",
-    storageBucket: "hs-online-earn-platform.firebasestorage.app",
-    messagingSenderId: "850821097967",
-    appId: "1:850821097967:web:f68872d834964de2e52e1a"
+// Firebase config
+var config = {
+  apiKey: "AIzaSyDbCLBrCfRYX-fRNQzHrLvOJaDQKG0tvys",
+  authDomain: "hs-online-earn-platform.firebaseapp.com",
+  projectId: "hs-online-earn-platform"
 };
+firebase.initializeApp(config);
 
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.database();
+var auth = firebase.auth();
+var db = firebase.firestore();
+var uid;
 
-function showSection(id) {
-    document.getElementById('authSection').classList.add('hidden');
-    document.getElementById('dashSection').classList.add('hidden');
-    document.getElementById('taskSection').classList.add('hidden');
-    document.getElementById('adminSection').classList.add('hidden');
-    
-    if(id==='dash') document.getElementById('dashSection').classList.remove('hidden');
-    if(id==='tasks') { document.getElementById('taskSection').classList.remove('hidden'); loadTasks(); }
-    if(id==='admin') document.getElementById('adminSection').classList.remove('hidden');
-}
+// REGISTER
+function register(){
+  auth.createUserWithEmailAndPassword(email.value, pass.value)
+  .then(userCredential => {
+    uid = userCredential.user.uid;
 
-function handleLogin() {
-    const e = document.getElementById('email').value.trim();
-    const p = document.getElementById('pass').value;
+    let referrerId = ref.value; // Referral UID
+    let bonus = 10; // Referral bonus
 
-    if(e === "sumaiyahabib9615@gmail.com" && p === "96152040") {
-        auth.signInWithEmailAndPassword(e, p).then(() => {
-            localStorage.setItem("role", "admin");
-            location.reload();
-        }).catch(() => alert("অ্যাডমিন অ্যাকাউন্ট ফায়ারবেসে নেই!"));
-    } else {
-        auth.signInWithEmailAndPassword(e, p).then(() => {
-            localStorage.setItem("role", "user");
-            location.reload();
-        }).catch(err => alert("ভুল তথ্য!"));
-    }
-}
+    db.collection("users").doc(uid).set({
+      name: name.value,
+      balance: 0,
+      refs: 0,
+      email: email.value,
+      admin: false
+    });
 
-auth.onAuthStateChanged(user => {
-    if(user) {
-        document.getElementById('mainHeader').classList.remove('hidden');
-        showSection('dash');
-        loadData(user.uid);
-        if(localStorage.getItem("role") === "admin") document.getElementById('adminLink').classList.remove('hidden');
-    } else {
-        document.getElementById('authSection').classList.remove('hidden');
-    }
-});
-
-function loadData(uid) {
-    db.ref('users/' + uid).on('value', s => {
-        const d = s.val();
-        if(d) {
-            document.getElementById('uName').innerText = "হ্যালো, " + d.name;
-            document.getElementById('uBalance').innerText = d.balance.toFixed(2);
-            document.getElementById('refLink').innerText = window.location.origin + "?ref=" + uid;
+    if(referrerId){
+      let refUser = db.collection("users").doc(referrerId);
+      refUser.get().then(doc => {
+        if(doc.exists){
+          refUser.update({
+            balance: firebase.firestore.FieldValue.increment(bonus),
+            refs: firebase.firestore.FieldValue.increment(1)
+          });
         }
-    });
-}
-
-function loadTasks() {
-    const list = document.getElementById('taskList');
-    list.innerHTML = "লোড হচ্ছে...";
-    db.ref('tasks').on('value', s => {
-        list.innerHTML = "";
-        s.forEach(c => {
-            const t = c.val();
-            list.innerHTML += `<div class="task-item" onclick="doTask('${t.link}', '${c.key}', ${t.reward})">
-                <span>${t.title}</span>
-                <span style="color:#22c55e">৳${t.reward}</span>
-            </div>`;
-        });
-    });
-}
-
-function doTask(link, id, reward) {
-    window.open(link, '_blank');
-    if(confirm("কাজটি শেষ করেছেন?")){
-        db.ref('users/' + auth.currentUser.uid + '/balance').transaction(b => (b||0) + reward);
-        alert("টাকা যোগ হয়েছে!");
+      });
     }
+
+    alert("Registered Successfully!");
+  })
+  .catch(err => alert(err.message));
 }
 
-// --- অ্যাডমিন সার্চ বক্স ফাংশন ---
-function searchUser() {
-    const q = document.getElementById('searchQuery').value.toLowerCase();
-    const resDiv = document.getElementById('searchResult');
-    resDiv.classList.add('hidden');
-    
-    db.ref('users').once('value', s => {
-        let found = false;
-        s.forEach(child => {
-            const u = child.val();
-            if(u.email?.toLowerCase().includes(q) || u.name?.toLowerCase().includes(q)) {
-                resDiv.innerHTML = `
-                    <strong>নাম:</strong> ${u.name}<br>
-                    <strong>ইমেইল:</strong> ${u.email || 'N/A'}<br>
-                    <strong>ব্যালেন্স:</strong> ৳${u.balance.toFixed(2)}<br>
-                    <strong>মোট রেফার:</strong> ${u.refs || 0}<br>
-                    <strong>ইউজার আইডি:</strong> ${child.key}
-                `;
-                resDiv.classList.remove('hidden');
-                found = true;
-            }
-        });
-        if(!found) alert("এই নামে কোনো ইউজার পাওয়া যায়নি!");
-    });
+// LOGIN
+function login(){
+  auth.signInWithEmailAndPassword(lEmail.value, lPass.value)
+  .then(r => {
+    uid = r.user.uid;
+    load();
+  })
+  .catch(err => alert(err.message));
 }
 
-function addTask() {
-    const title = document.getElementById('tTitle').value;
-    const link = document.getElementById('tLink').value;
-    const reward = Number(document.getElementById('tReward').value);
-    if(title && link && reward) {
-        db.ref('tasks').push({title, link, reward});
-        alert("টাস্ক অ্যাড হয়েছে!");
+// LOAD DASHBOARD
+function load(){
+  db.collection("users").doc(uid).get().then(d=>{
+    document.getElementById("auth").classList.add("hidden");
+    document.getElementById("dash").classList.remove("hidden");
+
+    document.getElementById("welcome").innerText = "Welcome "+d.data().name;
+    document.getElementById("bal").innerText = d.data().balance;
+
+    if(d.data().email === "habiburrahman962540@gmail.com" && d.data().admin === true){
+      document.querySelector("button[onclick='openAdmin()']").style.display = "block";
+    }else{
+      document.querySelector("button[onclick='openAdmin()']").style.display = "none";
     }
+
+    loadTasks();
+    loadWithdraw();
+  });
 }
 
-function logout() { auth.signOut().then(() => location.reload()); }
-function openNav() { document.getElementById("mySidebar").style.width = "250px"; }
-function closeNav() { document.getElementById("mySidebar").style.width = "0"; }
-function copyRef() {
-    const link = document.getElementById('refLink').innerText;
-    navigator.clipboard.writeText(link).then(() => alert("কপি হয়েছে!"));
+// LOAD TASKS
+function loadTasks(){
+  document.getElementById("taskList").innerHTML = "";
+  db.collection("tasks").get().then(s=>{
+    s.forEach(d=>{
+      let t = d.data();
+      document.getElementById("taskList").innerHTML += `
+        <div class="card">
+          ${t.title}<br>
+          <a href="${t.link}" target="_blank">Watch</a>
+          <button onclick="done('${d.id}',${t.reward})">Done</button>
+        </div>`;
+    });
+  });
 }
+
+// COMPLETE TASK
+function done(id,rw){
+  let ref = db.collection("users").doc(uid).collection("done").doc(id);
+  ref.get().then(d=>{
+    if(d.exists){ alert("Already done"); }
+    else{
+      ref.set({ok:true});
+      db.collection("users").doc(uid).update({
+        balance: firebase.firestore.FieldValue.increment(rw)
+      });
+      alert("Earned "+rw);
+      load();
+    }
+  });
+}
+
+// WITHDRAW REQUEST
+function req(){
+  if(a.value<50){ alert("Minimum withdraw 50"); return; }
+  db.collection("withdraw").add({
+    uid: uid,
+    method: m.value,
+    number: n.value,
+    amount: Number(a.value),
+    status: "pending"
+  });
+  alert("Request Sent");
+}
+
+// LOAD WITHDRAW REQUESTS (ADMIN)
+function loadWithdraw(){
+  document.getElementById("wList").innerHTML="";
+  db.collection("withdraw").get().then(s=>{
+    s.forEach(d=>{
+      let w = d.data();
+      document.getElementById("wList").innerHTML += `
+        <div class="card">
+          ${w.number} ৳${w.amount}
+          <button onclick="ok('${d.id}','${w.uid}',${w.amount})">✔</button>
+          <button onclick="no('${d.id}')">✖</button>
+        </div>`;
+    });
+  });
+}
+
+// APPROVE / REJECT WITHDRAW (ADMIN)
+function ok(id,u,a){
+  db.collection("withdraw").doc(id).update({status:"approved"});
+  db.collection("users").doc(u).update({
+    balance: firebase.firestore.FieldValue.increment(-a)
+  });
+  loadWithdraw();
+}
+function no(id){
+  db.collection("withdraw").doc(id).update({status:"rejected"});
+  loadWithdraw();
+}
+
+// ADD TASK (ADMIN)
+function addTask(){
+  db.collection("tasks").add({
+    title: t.value,
+    link: l.value,
+    reward: Number(r.value)
+  });
+  alert("Task Added");
+}
+
+// NAVIGATION
+function openTasks(){dash.classList.add("hidden");taskBox.classList.remove("hidden");}
+function openWithdraw(){dash.classList.add("hidden");withBox.classList.remove("hidden");}
+function openAdmin(){dash.classList.add("hidden");admin.classList.remove("hidden");}
+function back(){taskBox.classList.add("hidden");withBox.classList.add("hidden");admin.classList.add("hidden");dash.classList.remove("hidden");}
+function logout(){auth.signOut(); location.reload();}
 </script>
 </body>
 </html>
